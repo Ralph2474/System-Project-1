@@ -1,0 +1,151 @@
+{% extends 'base_public.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="panel register-panel mx-auto" style="max-width: 720px;">
+    <div class="eyebrow">New user</div>
+    <h2 class="mt-2">Create your account</h2>
+    <p class="text-muted mb-0">Choose your role first. We will only ask for the details needed for that workflow.</p>
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <section class="register-section" aria-labelledby="account-heading">
+            <div class="register-section-heading">
+                <span class="step-marker">1</span>
+                <div>
+                    <h3 id="account-heading">Account details</h3>
+                    <p>Use these details to sign in.</p>
+                </div>
+            </div>
+            <div class="register-grid">
+                <div class="register-field">
+                    {{ form.username.label_tag }}
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+                <div class="register-field">
+                    {{ form.email.label_tag }}
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
+            </div>
+        </section>
+
+        <section class="register-section" aria-labelledby="role-heading">
+            <div class="register-section-heading">
+                <span class="step-marker">2</span>
+                <div>
+                    <h3 id="role-heading">Choose your role</h3>
+                    <p>Your role controls the tools available after sign in.</p>
+                </div>
+            </div>
+            <div class="register-field">
+                {{ form.role.label_tag }}
+                {{ form.role }}
+                {{ form.role.errors }}
+            </div>
+        </section>
+
+        <section class="register-section role-fields" data-role="student" aria-labelledby="student-heading">
+            <div class="register-section-heading">
+                <span class="step-marker">3</span>
+                <div>
+                    <h3 id="student-heading">Student details</h3>
+                    <p>These details appear in your internship profile.</p>
+                </div>
+            </div>
+            <div class="register-grid">
+                <div class="register-field">
+                    {{ form.student_number.label_tag }}
+                    {{ form.student_number }}
+                    {{ form.student_number.errors }}
+                </div>
+                <div class="register-field">
+                    {{ form.course.label_tag }}
+                    {{ form.course }}
+                    {{ form.course.errors }}
+                </div>
+                <div class="register-field register-field-wide">
+                    {{ form.department.label_tag }}
+                    {{ form.department }}
+                    {{ form.department.errors }}
+                </div>
+            </div>
+        </section>
+
+        <section class="register-section role-fields" data-role="company_supervisor" aria-labelledby="company-heading">
+            <div class="register-section-heading">
+                <span class="step-marker">3</span>
+                <div>
+                    <h3 id="company-heading">Company details</h3>
+                    <p>These details identify your partner organization.</p>
+                </div>
+            </div>
+            <div class="register-grid">
+                <div class="register-field">
+                    {{ form.company_name.label_tag }}
+                    {{ form.company_name }}
+                    {{ form.company_name.errors }}
+                </div>
+                <div class="register-field">
+                    {{ form.contact_person.label_tag }}
+                    {{ form.contact_person }}
+                    {{ form.contact_person.errors }}
+                </div>
+                <div class="register-field register-field-wide">
+                    {{ form.office_address.label_tag }}
+                    {{ form.office_address }}
+                    {{ form.office_address.errors }}
+                </div>
+            </div>
+        </section>
+
+        <section class="register-section" aria-labelledby="password-heading">
+            <div class="register-section-heading">
+                <span class="step-marker">4</span>
+                <div>
+                    <h3 id="password-heading">Set a password</h3>
+                    <p>Use a password you do not reuse elsewhere.</p>
+                </div>
+            </div>
+            <div class="register-grid">
+                <div class="register-field">
+                    {{ form.password1.label_tag }}
+                    {{ form.password1 }}
+                    {{ form.password1.errors }}
+                </div>
+                <div class="register-field">
+                    {{ form.password2.label_tag }}
+                    {{ form.password2 }}
+                    {{ form.password2.errors }}
+                </div>
+            </div>
+        </section>
+
+        <div class="register-submit">
+            <button class="btn btn-success" type="submit"><i class="bi bi-person-plus me-2" aria-hidden="true"></i>Create account</button>
+        </div>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('id_role');
+    const roleSections = document.querySelectorAll('[data-role]');
+
+    function updateRoleFields() {
+        roleSections.forEach(function(section) {
+            const isActive = section.dataset.role === roleSelect.value;
+            section.hidden = !isActive;
+            section.querySelectorAll('input, textarea, select').forEach(function(field) {
+                field.disabled = !isActive;
+            });
+        });
+    }
+
+    roleSelect.addEventListener('change', updateRoleFields);
+    updateRoleFields();
+});
+</script>
+{% endblock %}

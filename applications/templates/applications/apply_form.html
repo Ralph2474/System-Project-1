@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Apply to Internship{% endblock %}
+{% block page_title %}Apply to Internship{% endblock %}
+{% block content %}
+<div class="form-panel mx-auto" style="max-width: 640px;">
+    <div class="eyebrow">Application</div>
+    <h2 class="mt-2">Apply to Internship</h2>
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.cover_letter.label_tag }}
+            {{ form.cover_letter }}
+            {{ form.cover_letter.errors }}
+        </div>
+        <button class="btn btn-primary" type="submit">Submit Application</button>
+    </form>
+</div>
+{% endblock %}

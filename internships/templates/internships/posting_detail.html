@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Posting Details{% endblock %}
+{% block page_title %}Posting details{% endblock %}
+{% block content %}
+<div class="panel">
+    {% if not posting %}
+        <div class="empty-state">
+            <i class="bi bi-lock-fill"></i>
+            <h2 class="mt-2">This opportunity is closed</h2>
+            <p class="mb-3">The posting is no longer accepting applications.</p>
+            <a href="{% url 'internships:posting_list' %}" class="btn btn-primary">Browse open internships</a>
+        </div>
+    {% else %}
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+            <div>
+                <div class="eyebrow">Opportunity detail</div>
+                <h2 class="mt-2 mb-0">{{ posting.title }}</h2>
+            </div>
+            {% if posting.is_open %}
+                <span class="status-badge status-approved">Open for applications</span>
+            {% else %}
+                <span class="status-badge status-rejected">Closed</span>
+            {% endif %}
+        </div>
+        <div class="row mt-3 g-3">
+        <div class="col-md-6">
+            <div class="card-panel">
+                <p><strong>Company:</strong> {{ posting.company.name }}</p>
+                <p><strong>Location:</strong> {{ posting.location }}</p>
+                <p><strong>Duration:</strong> {{ posting.duration }}</p>
+                <p><strong>Required hours:</strong> {{ posting.required_hours }}</p>
+                <p><strong>Slots available:</strong> {{ posting.slots_available }}</p>
+                <p><strong>Deadline:</strong> {{ posting.deadline }}</p>
+                <p><strong>Status:</strong> {% if posting.is_open %}Open{% else %}Closed{% endif %}</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card-panel">
+                <p>{{ posting.description }}</p>
+                {% if user.role == 'student' and posting.is_open %}
+                    <a href="{% url 'applications:apply_to_internship' posting.pk %}" class="btn btn-success">Apply for this posting</a>
+                {% endif %}
+                {% if user.role == 'coordinator' %}
+                    <a href="{% url 'internships:posting_update' posting.pk %}" class="btn btn-secondary">Edit</a>
+                    <form method="post" action="{% url 'internships:posting_delete' posting.pk %}" class="d-inline" onsubmit="return confirm('Delete this internship posting?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+            </div>
+            {% endif %}
+    </div>
+</div>
+{% endblock %}

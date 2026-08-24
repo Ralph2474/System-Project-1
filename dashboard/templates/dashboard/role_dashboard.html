@@ -1,0 +1,414 @@
+<!-- eslint-disable -->
+<!-- stylelint-disable -->
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}{{ role_label }} Dashboard{% endblock %}
+{% block content %}
+<div class="stats-grid">
+    {% for card in card_items %}
+        <div class="stat-card card-panel">
+            <div class="eyebrow">{{ card.label }}</div>
+            <div class="stat-value">
+                {{ card.value }}
+            </div>
+            {% if forloop.counter0 == 0 %}
+                <div class="progress-meter" aria-label="Hours completed progress">
+                    <span data-progress="{{ progress_width }}"></span>
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const progressSpans = document.querySelectorAll('[data-progress]');
+    progressSpans.forEach(span => {
+        const width = span.getAttribute('data-progress');
+        span.style.width = width + '%';
+    });
+});
+</script>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-6">
+        <div class="panel card-panel">
+            <div class="eyebrow">Hours Progress</div>
+            <h2 class="mt-2">OJT Hours Status</h2>
+            <div class="list-group mt-3">
+                {% for item in activity_items %}
+                    <div class="list-group-item border-0 px-0 py-2">
+                        <strong>{{ item.label }}:</strong> {{ item.value }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="panel card-panel">
+            <div class="eyebrow">Quick Actions</div>
+            <h2 class="mt-2">Jump to next step</h2>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                {% if role == 'student' %}
+                    <a href="{% url 'timelog:time_log_form' %}" class="btn btn-primary">Log Time</a>
+                    <a href="{% url 'internships:posting_list' %}" class="btn btn-outline-primary">Apply</a>
+                    <a href="{% url 'documents:document_upload' %}" class="btn btn-outline-primary">Upload</a>
+                {% elif role == 'coordinator' %}
+                    <a href="{% url 'applications:application_manage' %}" class="btn btn-primary">Manage Applications</a>
+                    <a href="{% url 'documents:document_validate' %}" class="btn btn-outline-primary">Validate Documents</a>
+                    <a href="{% url 'internships:posting_create' %}" class="btn btn-outline-primary">Create Posting</a>
+                {% elif role == 'company_supervisor' %}
+                    <a href="{% url 'evaluations:evaluation_form' %}" class="btn btn-primary">Submit Evaluation</a>
+                    <a href="{% url 'evaluations:evaluation_list' %}" class="btn btn-outline-primary">View Evaluations</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if role == 'company_supervisor' %}
+    <div class="panel mt-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+            <div>
+                <div class="eyebrow">Assigned students</div>
+                <h2 class="mt-2 mb-1">Your supervision list</h2>
+                <p class="text-muted mb-0">Track hours and complete outstanding evaluations.</p>
+            </div>
+            <a href="{% url 'evaluations:evaluation_form' %}" class="btn btn-success">Submit evaluation</a>
+        </div>
+        {% if supervisor_students %}
+            <div class="table-shell mt-3">
+                <table class="table-card">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Internship</th>
+                            <th>Hours</th>
+                            <th>Evaluation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in supervisor_students %}
+                            <tr>
+                                <td><strong>{{ item.student.username }}</strong></td>
+                                <td>{{ item.internship.title }}</td>
+                                <td>
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>{{ item.hours_completed }} / {{ item.required_hours }}</span>
+                                        <strong>{{ item.completion_percent }}%</strong>
+                                    </div>
+                                    <div class="progress-meter"><span style="width: {{ item.completion_percent }}%"></span></div>
+                                </td>
+                                <td>
+                                    {% if item.is_evaluated %}
+                                        <span class="status-badge status-approved">Submitted</span>
+                                    {% else %}
+                                        <a href="{% url 'evaluations:evaluation_form_for_student' item.student.pk %}" class="status-badge status-pending">Evaluate</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state mt-3">No students are assigned to you yet.</div>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Charts Section -->
+<div class="row g-3 mt-3">
+    {% if role == 'student' %}
+        <div class="col-lg-6">
+            <div class="panel card-panel">
+                <div class="eyebrow">Your Progress</div>
+                <h2 class="mt-2">Hours Logged (Last 7 Entries)</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="hoursChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="panel card-panel">
+                <div class="eyebrow">Application Status</div>
+                <h2 class="mt-2">Your Applications Breakdown</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="appStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    {% elif role == 'coordinator' %}
+        <div class="col-lg-4">
+            <div class="panel card-panel">
+                <div class="eyebrow">Overview</div>
+                <h2 class="mt-2">System Statistics</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel card-panel">
+                <div class="eyebrow">Applications</div>
+                <h2 class="mt-2">Application Status Distribution</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="appStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="panel card-panel">
+                <div class="eyebrow">Documents</div>
+                <h2 class="mt-2">Document Validation Status</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="docStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    {% elif role == 'company_supervisor' %}
+        <div class="col-lg-6">
+            <div class="panel card-panel">
+                <div class="eyebrow">Student Evaluations</div>
+                <h2 class="mt-2">Evaluation Ratings</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="evalChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="panel card-panel">
+                <div class="eyebrow">Student Progress</div>
+                <h2 class="mt-2">Hours Completion by Student</h2>
+                <div class="mt-3" style="height: 300px;">
+                    <canvas id="studentHoursChart"></canvas>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Chart === 'undefined') {
+        return;
+    }
+
+    // Chart.js configuration
+    Chart.defaults.font.family = "'Source Sans 3', 'Segoe UI', sans-serif";
+    Chart.defaults.color = '#5d6672';
+    
+    {% if role == 'student' %}
+        // Student: Hours Chart
+        const hoursCtx = document.getElementById('hoursChart').getContext('2d');
+        new Chart(hoursCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_data.hours_chart.labels|safe }},
+                datasets: [{
+                    label: 'Hours Completed',
+                    data: {{ chart_data.hours_chart.data|safe }},
+                    borderColor: '#c98e3a',
+                    backgroundColor: 'rgba(201, 142, 58, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Student: Application Status Chart
+        const appStatusCtx = document.getElementById('appStatusChart').getContext('2d');
+        new Chart(appStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_data.app_status_chart.labels|safe }},
+                datasets: [{
+                    data: {{ chart_data.app_status_chart.data|safe }},
+                    backgroundColor: ['#c98e3a', '#4b7d59', '#a94c4c'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+    {% elif role == 'coordinator' %}
+        // Coordinator: Statistics Chart
+        const statsCtx = document.getElementById('statsChart').getContext('2d');
+        new Chart(statsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_data.stats_chart.labels|safe }},
+                datasets: [{
+                    label: 'Count',
+                    data: {{ chart_data.stats_chart.data|safe }},
+                    backgroundColor: ['#0f2747', '#2e5b8a', '#c98e3a', '#4b7d59'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Coordinator: Application Status Chart
+        const appStatusCtx = document.getElementById('appStatusChart').getContext('2d');
+        new Chart(appStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: {{ chart_data.app_status_chart.labels|safe }},
+                datasets: [{
+                    data: {{ chart_data.app_status_chart.data|safe }},
+                    backgroundColor: ['#c98e3a', '#4b7d59', '#a94c4c'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Coordinator: Document Status Chart
+        const docStatusCtx = document.getElementById('docStatusChart').getContext('2d');
+        new Chart(docStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_data.doc_status_chart.labels|safe }},
+                datasets: [{
+                    data: {{ chart_data.doc_status_chart.data|safe }},
+                    backgroundColor: ['#c98e3a', '#4b7d59', '#a94c4c'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+    {% elif role == 'company_supervisor' %}
+        // Company Supervisor: Evaluation Chart
+        const evalCtx = document.getElementById('evalChart').getContext('2d');
+        new Chart(evalCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_data.eval_chart.labels|safe }},
+                datasets: [{
+                    label: 'Rating',
+                    data: {{ chart_data.eval_chart.data|safe }},
+                    backgroundColor: '#c98e3a',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        title: {
+                            display: true,
+                            text: 'Rating (1-5)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Company Supervisor: Student Hours Chart
+        const studentHoursCtx = document.getElementById('studentHoursChart').getContext('2d');
+        new Chart(studentHoursCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_data.student_hours_chart.labels|safe }},
+                datasets: [
+                    {
+                        label: 'Completed',
+                        data: {{ chart_data.student_hours_chart.completed|safe }},
+                        backgroundColor: '#4b7d59',
+                        borderWidth: 0
+                    },
+                    {
+                        label: 'Required',
+                        data: {{ chart_data.student_hours_chart.required|safe }},
+                        backgroundColor: '#c98e3a',
+                        borderWidth: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    }
+                }
+            }
+        });
+    {% endif %}
+});
+</script>
+{% endblock %}

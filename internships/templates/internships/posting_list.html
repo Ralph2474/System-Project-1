@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Internship Postings{% endblock %}
+{% block page_title %}Internship postings{% endblock %}
+{% block content %}
+<div class="panel">
+    <div class="eyebrow">Posted opportunities</div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+        <h2 class="mb-0">Available Internship Postings</h2>
+        {% if user.role == 'coordinator' %}
+            <a href="{% url 'internships:posting_report' %}" class="btn btn-outline-primary">Export Excel</a>
+        {% endif %}
+    </div>
+    <div class="internship-summary mt-3" aria-label="Posting summary">
+        <span><strong>{{ open_postings }}</strong> open</span>
+        <span><strong>{{ total_postings }}</strong> matching your view</span>
+    </div>
+    
+    <!-- Search and Filter Section -->
+    <div class="card-panel mt-3">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search by title, company, or location..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="location" class="form-control" placeholder="Filter by location..." value="{{ location_filter }}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="sort" class="form-select">
+                    <option value="deadline" {% if sort_by == 'deadline' %}selected{% endif %}>Sort by Deadline</option>
+                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Sort by Title</option>
+                    <option value="company" {% if sort_by == 'company' %}selected{% endif %}>Sort by Company</option>
+                    <option value="updated" {% if sort_by == 'updated' %}selected{% endif %}>Sort by Recent</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+        {% if search_query or location_filter or status_filter %}
+        <div class="mt-2">
+            <a href="{% url 'internships:posting_list' %}" class="btn btn-sm btn-outline-secondary">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if postings %}
+        <div class="table-shell mt-3">
+            <table class="table-card">
+                <thead>
+                    <tr>
+                        <th>Posting</th>
+                        <th>Company</th>
+                        <th>Location</th>
+                        <th>Deadline</th>
+                        <th>Slots</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for posting in postings %}
+                        <tr>
+                            <td><a href="{% url 'internships:posting_detail' posting.pk %}"><strong>{{ posting.title }}</strong></a></td>
+                            <td>{{ posting.company.name }}</td>
+                            <td><span class="label-chip">{{ posting.location }}</span></td>
+                            <td>{{ posting.deadline|default:'No deadline' }}</td>
+                            <td>{{ posting.slots_available }}</td>
+                            <td>
+                                {% if posting.is_open %}
+                                    <span class="status-badge status-approved">Open</span>
+                                {% else %}
+                                    <span class="status-badge status-rejected">Closed</span>
+                                {% endif %}
+                            </td>
+                            <td><a href="{% url 'internships:posting_detail' posting.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if postings.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if postings.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ postings.previous_page_number }}&search={{ search_query }}&location={{ location_filter }}&status={{ status_filter }}&sort={{ sort_by }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+                
+                {% for num in postings.paginator.page_range %}
+                    {% if postings.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}&search={{ search_query }}&location={{ location_filter }}&status={{ status_filter }}&sort={{ sort_by }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if postings.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ postings.next_page_number }}&search={{ search_query }}&location={{ location_filter }}&status={{ status_filter }}&sort={{ sort_by }}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted small">
+            Page {{ postings.number }} of {{ postings.paginator.num_pages }} ({{ postings.paginator.count }} total postings)
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state mt-3">
+            <i class="bi bi-hourglass-split"></i>
+            <div>No postings found matching your criteria. <a href="{% url 'internships:posting_list' %}">Clear filters</a></div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

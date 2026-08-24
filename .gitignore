@@ -1,0 +1,79 @@
+# Python environments
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# Python caches and tooling
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.hypothesis/
+.dmypy.json
+dmypy.json
+
+# Test and coverage output
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Docker Compose config - contains real DB password/secret key once configured
+docker-compose.yml
+
+# Local databases and SQLite runtime files
+db.sqlite3
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Generated and collected assets
+staticfiles/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# User uploads and generated backups
+media/
+backups/
+
+# Editor and assistant tooling
+.agents/
+.claude/
+.cursor/
+.devin/
+.impeccable/
+.pi/
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Django local artifacts
+*.session
+local_settings.py
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+Desktop.ini
