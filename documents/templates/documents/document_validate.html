@@ -54,7 +54,7 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     {% if document.file %}
-                                    <a href="{{ document.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a href="{% url 'documents:document_file' document.pk %}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
                                     {% endif %}
                                     <form method="post" action="{% url 'documents:document_decide' document.pk %}">
                                         {% csrf_token %}

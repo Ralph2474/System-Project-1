@@ -152,7 +152,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Local timezone of the school/office. Date rules ("no future time logs",
+# posting deadlines) use the local date, so this must match where users are.
+TIME_ZONE = os.environ.get('TIME_ZONE', 'UTC')
 
 USE_I18N = True
 

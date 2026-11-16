@@ -1,0 +1,41 @@
+# Keep secrets, local data and tooling out of the Docker image.
+# (The Dockerfile does `COPY . .`; anything not listed here ends up in the image.)
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+docker-compose.yml
+docker-compose.*.yml
+compose*.yml
+
+# Local data: database, uploads, backups (personal data, password hashes)
+db.sqlite3
+*.sqlite3*
+media/
+backups/
+staticfiles/
+
+# Version control, environments, caches, editors
+.git/
+.gitignore
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.vscode/
+.idea/
+.claude/
+
+# Documentation and misc files not needed at runtime
+GUIDE FILES/
+*.pdf
+*.md
+node_modules/
+*.log
+Thumbs.db
+.DS_Store

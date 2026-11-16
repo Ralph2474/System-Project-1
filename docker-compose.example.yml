@@ -1,0 +1,47 @@
+# Template for docker-compose.yml (which is git-ignored).
+#
+#   cp docker-compose.example.yml docker-compose.yml
+#   cp .env.example .env        # then edit .env and set real secrets
+#   docker compose up --build -d
+#
+# All secrets and settings come from .env, so this file contains no passwords
+# and is safe to commit.
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      # Fixed for this two-container setup: the web app talks to the "db" service.
+      DATABASE_ENGINE: postgresql
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    volumes:
+      - media_data:/app/media
+      - ./backups:/app/backups
+    command: sh -c "python manage.py migrate && gunicorn ojt_management_system.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+
+volumes:
+  postgres_data:
+  media_data:

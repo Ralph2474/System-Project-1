@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.dateparse import parse_date
 
 from accounts.decorators import role_login_required
 from accounts.models import CustomUser
@@ -8,6 +9,13 @@ from applications.models import PlacementRecord
 
 from .forms import DailyTimeLogForm
 from .models import DailyTimeLog
+
+
+def _parse_date(value):
+    try:
+        return parse_date(value) if value else None
+    except ValueError:  # well-formed but impossible, e.g. 2026-02-31
+        return None
 
 
 @role_login_required(CustomUser.ROLE_STUDENT)
@@ -31,12 +39,19 @@ def time_log_list(request):
         entries = entries.filter(accomplishment__icontains=search_query)
     
     # Date range filtering
+    # Ignore malformed dates instead of crashing with a 500.
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
-    if date_from:
-        entries = entries.filter(entry_date__gte=date_from)
-    if date_to:
-        entries = entries.filter(entry_date__lte=date_to)
+    parsed_from = _parse_date(date_from)
+    parsed_to = _parse_date(date_to)
+    if parsed_from:
+        entries = entries.filter(entry_date__gte=parsed_from)
+    else:
+        date_from = ''
+    if parsed_to:
+        entries = entries.filter(entry_date__lte=parsed_to)
+    else:
+        date_to = ''
     
     # Sorting functionality
     sort_by = request.GET.get('sort', 'entry_date')
@@ -75,7 +90,10 @@ def time_log_list(request):
 
 @role_login_required(CustomUser.ROLE_STUDENT)
 def time_log_form(request):
-    placement = get_object_or_404(PlacementRecord, student=request.user)
+    placement = PlacementRecord.objects.filter(student=request.user).first()
+    if placement is None:
+        messages.info(request, 'You can log time once you have been placed in an internship.')
+        return redirect('timelog:time_log_list')
     if request.method == 'POST':
         form = DailyTimeLogForm(request.POST, placement=placement)
         if form.is_valid():
@@ -93,7 +111,10 @@ def time_log_form(request):
 @role_login_required(CustomUser.ROLE_STUDENT)
 def time_log_update(request, pk):
     entry = get_object_or_404(DailyTimeLog, pk=pk, student=request.user)
-    placement = get_object_or_404(PlacementRecord, student=request.user)
+    placement = PlacementRecord.objects.filter(student=request.user).first()
+    if placement is None:
+        messages.info(request, 'You can edit time logs once you have been placed in an internship.')
+        return redirect('timelog:time_log_list')
     if request.method == 'POST':
         form = DailyTimeLogForm(request.POST, instance=entry, placement=placement)
         if form.is_valid():

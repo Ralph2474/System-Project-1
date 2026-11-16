@@ -197,11 +197,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Chart.js configuration
     Chart.defaults.font.family = "'Source Sans 3', 'Segoe UI', sans-serif";
     Chart.defaults.color = '#5d6672';
-    
+
+    // Replace a chart with a friendly placeholder when there's nothing to plot,
+    // instead of rendering an empty canvas (blank doughnut / bare axes).
+    function makeChart(ctx, config) {
+        const values = (config.data.datasets || []).flatMap(ds => ds.data || []);
+        if (!values.some(v => Number(v) > 0)) {
+            const box = ctx.canvas.parentNode;
+            box.innerHTML = '<div class="chart-empty"><i class="bi bi-bar-chart" aria-hidden="true"></i><div>No data to show yet.</div></div>';
+            return null;
+        }
+        return new Chart(ctx, config);
+    }
+
     {% if role == 'student' %}
         // Student: Hours Chart
         const hoursCtx = document.getElementById('hoursChart').getContext('2d');
-        new Chart(hoursCtx, {
+        makeChart(hoursCtx, {
             type: 'line',
             data: {
                 labels: {{ chart_data.hours_chart.labels|safe }},
@@ -236,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Student: Application Status Chart
         const appStatusCtx = document.getElementById('appStatusChart').getContext('2d');
-        new Chart(appStatusCtx, {
+        makeChart(appStatusCtx, {
             type: 'doughnut',
             data: {
                 labels: {{ chart_data.app_status_chart.labels|safe }},
@@ -260,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
     {% elif role == 'coordinator' %}
         // Coordinator: Statistics Chart
         const statsCtx = document.getElementById('statsChart').getContext('2d');
-        new Chart(statsCtx, {
+        makeChart(statsCtx, {
             type: 'bar',
             data: {
                 labels: {{ chart_data.stats_chart.labels|safe }},
@@ -289,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Coordinator: Application Status Chart
         const appStatusCtx = document.getElementById('appStatusChart').getContext('2d');
-        new Chart(appStatusCtx, {
+        makeChart(appStatusCtx, {
             type: 'pie',
             data: {
                 labels: {{ chart_data.app_status_chart.labels|safe }},
@@ -312,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Coordinator: Document Status Chart
         const docStatusCtx = document.getElementById('docStatusChart').getContext('2d');
-        new Chart(docStatusCtx, {
+        makeChart(docStatusCtx, {
             type: 'doughnut',
             data: {
                 labels: {{ chart_data.doc_status_chart.labels|safe }},
@@ -336,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
     {% elif role == 'company_supervisor' %}
         // Company Supervisor: Evaluation Chart
         const evalCtx = document.getElementById('evalChart').getContext('2d');
-        new Chart(evalCtx, {
+        makeChart(evalCtx, {
             type: 'bar',
             data: {
                 labels: {{ chart_data.eval_chart.labels|safe }},
@@ -370,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Company Supervisor: Student Hours Chart
         const studentHoursCtx = document.getElementById('studentHoursChart').getContext('2d');
-        new Chart(studentHoursCtx, {
+        makeChart(studentHoursCtx, {
             type: 'bar',
             data: {
                 labels: {{ chart_data.student_hours_chart.labels|safe }},

@@ -1,5 +1,8 @@
+import os
+
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.http import FileResponse, Http404
+from django.utils.http import urlencode
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -55,7 +58,7 @@ def document_list(request):
     return render(request, 'documents/document_list.html', context)
 
 
-@login_required
+@role_login_required(CustomUser.ROLE_STUDENT)
 def document_upload(request):
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -142,8 +145,27 @@ def document_decide(request, pk):
             search_query = request.POST.get('search', '')
             sort_by = request.POST.get('sort', 'uploaded_on')
             page = request.POST.get('page', '1')
-            redirect_url = f"?search={search_query}&sort={sort_by}&page={page}"
-            return redirect(f"{reverse('documents:document_validate')}{redirect_url}")
+            query = urlencode({'search': search_query, 'sort': sort_by, 'page': page})
+            return redirect(f"{reverse('documents:document_validate')}?{query}")
     else:
         form = DocumentDecisionForm()
     return render(request, 'documents/document_validate.html', {'documents': SubmittedDocument.objects.filter(status=SubmittedDocument.STATUS_PENDING), 'form': form, 'document': document})
+
+
+@role_login_required(CustomUser.ROLE_STUDENT, CustomUser.ROLE_COORDINATOR)
+def document_file(request, pk):
+    """Stream an uploaded document to its owner or a coordinator.
+
+    Files are served through this view instead of a public /media/ URL so that
+    they stay private and also work when DEBUG=False (Django does not serve
+    MEDIA_URL in production)."""
+    document = get_object_or_404(SubmittedDocument, pk=pk)
+    if request.user.role == CustomUser.ROLE_STUDENT and document.student_id != request.user.pk:
+        raise Http404
+    if not document.file:
+        raise Http404
+    try:
+        handle = document.file.open('rb')
+    except FileNotFoundError:
+        raise Http404
+    return FileResponse(handle, filename=os.path.basename(document.file.name))

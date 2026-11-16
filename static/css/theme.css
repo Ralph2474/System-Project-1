@@ -610,7 +610,9 @@ a:focus-visible {
     }
 
     .app-shell {
-        grid-template-columns: 1fr;
+        /* minmax(0, 1fr): don't let the nowrap, horizontally-scrolling nav
+           force the column wider than the viewport. */
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .sidebar {
@@ -674,8 +676,13 @@ a:focus-visible {
 
     .topbar {
         align-items: flex-start;
+        flex-wrap: wrap;
         gap: 0.75rem;
         padding: 0.9rem;
+    }
+
+    .topbar .role-pill {
+        white-space: normal;
     }
 
     .page-title {
@@ -969,4 +976,173 @@ a:focus-visible {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none !important;
+}
+
+/* ------------------------------------------------------------------
+   Default form styling
+   Most forms render raw Django widgets ({{ field }} / form.as_p) without
+   Bootstrap classes. Give every un-classed control the themed look so
+   all forms - including Django's built-in auth forms - are consistent.
+   ------------------------------------------------------------------ */
+form label {
+    display: block;
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-bottom: 0.35rem;
+}
+
+form :is(
+    input:not([type="checkbox"], [type="radio"], [type="submit"], [type="button"], [type="hidden"], [type="file"], [type="range"], [type="color"]),
+    select,
+    textarea
+):not(.form-control, .form-select, .form-check-input) {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.8rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text);
+    background-color: var(--surface-2);
+    border: 1px solid #cbbfa8;
+    border-radius: 12px;
+    appearance: auto;
+}
+
+form textarea:not(.form-control) {
+    min-height: 120px;
+    resize: vertical;
+}
+
+form :is(input, select, textarea):not(.form-control, .form-select, .form-check-input):focus {
+    border-color: var(--secondary);
+    box-shadow: var(--focus-ring);
+    outline: none;
+}
+
+form input[type="file"]:not(.form-control) {
+    display: block;
+    width: 100%;
+    padding: 0.45rem;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px dashed #cbbfa8;
+    border-radius: 12px;
+}
+
+form input[type="file"]::file-selector-button {
+    margin-right: 0.8rem;
+    padding: 0.4rem 0.85rem;
+    border: none;
+    border-radius: 9px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+form input[type="checkbox"]:not(.form-check-input),
+form input[type="radio"]:not(.form-check-input) {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--primary);
+    vertical-align: middle;
+}
+
+/* Checkbox rendered after its label (label_tag + field): keep on one line */
+form label:has(+ input[type="checkbox"]) {
+    display: inline-block;
+    margin-right: 0.5rem;
+    margin-bottom: 0;
+}
+
+form .helptext,
+form .form-text {
+    display: block;
+    color: var(--muted);
+    font-size: 0.84rem;
+    margin-top: 0.3rem;
+}
+
+form ul.helptext,
+form .helptext ul {
+    padding-left: 1.1rem;
+    margin-bottom: 0;
+}
+
+/* form.as_p spacing */
+form > p,
+form > div > p {
+    margin-bottom: 1rem;
+}
+
+/* Centered panels (mx-auto + max-width) inside the grid content area would
+   otherwise shrink to fit their content; let them fill up to their max-width. */
+.content-area > .mx-auto,
+.public-main > .mx-auto {
+    width: 100%;
+}
+
+.public-brand,
+.public-brand:hover {
+    color: var(--primary);
+}
+
+.public-brand .brand-mark {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* Bootstrap list-groups inside themed panels should blend in */
+.card-panel .list-group-item,
+.panel .list-group-item {
+    background: transparent;
+    color: var(--text);
+}
+
+/* Centered card used on public auth pages */
+.auth-card {
+    width: 100%;
+    max-width: 540px;
+    margin: 2rem auto;
+}
+
+/* Role pill on the light topbar (default pill is styled for the dark sidebar) */
+.topbar .role-pill {
+    background: var(--accent-soft);
+    color: #6e4c14;
+    font-weight: 700;
+}
+
+.topbar .role-pill:hover {
+    background: var(--accent-soft);
+}
+
+/* Current page in sidebar */
+.sidebar-nav a.active {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.sidebar-nav a.active::before {
+    transform: scaleY(1);
+}
+
+/* Empty chart placeholder */
+.chart-empty {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 0.4rem;
+    color: var(--muted);
+    text-align: center;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-sm);
+}
+
+.chart-empty .bi {
+    font-size: 1.6rem;
+    color: var(--secondary);
 }

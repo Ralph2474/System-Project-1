@@ -29,8 +29,11 @@ coverage.xml
 !.env.example
 *.local
 
-# Docker Compose config - contains real DB password/secret key once configured
+# Docker Compose config - contains real DB password/secret key once configured.
+# Commit docker-compose.example.yml (the template) instead.
 docker-compose.yml
+docker-compose.override.yml
+compose.override.yml
 
 # Local databases and SQLite runtime files
 db.sqlite3
@@ -48,9 +51,19 @@ yarn-error.log*
 dist/
 build/
 
-# User uploads and generated backups
+# User uploads and generated backups (contain personal data and password hashes)
 media/
 backups/
+
+# Excel reports downloaded from the app (Export Excel)
+internship_postings_*.xlsx
+
+# Python packaging / tooling output
+*.egg-info/
+.eggs/
+.tox/
+.nox/
+pip-wheel-metadata/
 
 # Editor and assistant tooling
 .agents/
@@ -76,4 +89,9 @@ local_settings.py
 # Operating-system files
 .DS_Store
 Thumbs.db
+ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
+
+# Microsoft Office lock files (created while a .docx/.xlsx is open)
+~$*

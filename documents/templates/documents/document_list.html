@@ -65,7 +65,7 @@
                             <td>{{ document.uploaded_on|date:"M d, Y" }}</td>
                             <td>
                                 {% if document.file %}
-                                <a href="{{ document.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{% url 'documents:document_file' document.pk %}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
                                 {% endif %}
                                 {% if document.status != 'validated' %}
                                 <form method="post" action="{% url 'documents:document_delete' document.pk %}" class="d-inline" onsubmit="return confirm('Delete this document?');">

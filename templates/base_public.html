@@ -12,12 +12,12 @@
 <body>
 <div class="public-shell">
     <header class="public-topbar">
-        <div class="public-brand">
+        <a href="{% url 'accounts:landing' %}" class="public-brand text-decoration-none">
             <div class="brand-mark">OJT</div>
             <div>
                 <div class="brand-text">Internship & OJT</div>
             </div>
-        </div>
+        </a>
         <div class="public-actions">
             <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login</a>
             <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary">Create account</a>

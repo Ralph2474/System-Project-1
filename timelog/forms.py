@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from .models import DailyTimeLog
 
@@ -49,6 +50,9 @@ class DailyTimeLogForm(forms.ModelForm):
                 raise ValidationError("Time entries must be at least 30 minutes.")
 
             cleaned_data['hours_completed'] = hours
+
+        if entry_date and entry_date > timezone.localdate():
+            raise ValidationError('You cannot log time for a future date.')
 
         if (
             self.placement

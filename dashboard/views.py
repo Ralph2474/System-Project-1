@@ -173,7 +173,7 @@ def role_dashboard(request):
             {'label': 'Applications', 'value': f'{pending_applications} pending review'},
             {'label': 'Documents', 'value': f'{documents_submitted} awaiting validation'},
         ]
-        card_labels = ['Hours completed', 'Pending applications', 'Documents submitted']
+        card_labels = ['Hours completed', 'Pending applications', 'Documents awaiting validation']
         card_values = [f'{hours_completed_pct}%', pending_applications, documents_submitted]
 
     context = {

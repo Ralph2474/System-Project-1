@@ -17,7 +17,7 @@
             <div class="brand-mark">OJT</div>
             <div>
                 <div class="brand-text">Internship & OJT</div>
-                <div class="role-pill">{% if user.is_authenticated %}{{ user.role|default:'student' }}{% else %}portal{% endif %}</div>
+                <div class="role-pill">{% if user.is_authenticated %}{{ user.get_role_display|default:'Student' }}{% else %}portal{% endif %}</div>
             </div>
         </div>
 
@@ -33,7 +33,7 @@
                     <a href="{% url 'accounts:student_profile' %}"><i class="bi bi-person-badge me-2"></i>Profile</a>
                 {% elif user.role == 'coordinator' %}
                     <a href="{% url 'dashboard:role_dashboard' %}"><i class="bi bi-grid-1x2-fill me-2"></i>Dashboard</a>
-                    <a href="{% url 'internships:posting_create' %}"><i class="bi bi-journal-plus me-2"></i>Manage Postings</a>
+                    <a href="{% url 'internships:posting_list' %}"><i class="bi bi-journal-plus me-2"></i>Manage Postings</a>
                     <a href="{% url 'internships:company_create' %}"><i class="bi bi-building-add me-2"></i>Add Company</a>
                     <a href="{% url 'applications:application_manage' %}"><i class="bi bi-people me-2"></i>Review Applications</a>
                     <a href="{% url 'documents:document_validate' %}"><i class="bi bi-shield-check me-2"></i>Validate Documents</a>
@@ -68,7 +68,7 @@
             </div>
             <div class="topbar-actions">
                 {% if user.is_authenticated %}
-                    <span class="role-pill">{{ user.role }}</span>
+                    <span class="role-pill"><i class="bi bi-person-circle me-1" aria-hidden="true"></i>{{ user.get_full_name|default:user.username }} · {{ user.get_role_display }}</span>
                 {% endif %}
             </div>
         </header>
@@ -95,5 +95,19 @@
     </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Highlight the sidebar link that best matches the current page (longest path prefix wins).
+(function () {
+    var path = window.location.pathname;
+    var best = null, bestLen = 0;
+    document.querySelectorAll('.sidebar-nav a').forEach(function (link) {
+        var href = new URL(link.href, window.location.origin).pathname;
+        if (href === '/' ? path === '/' : path.indexOf(href) === 0) {
+            if (href.length > bestLen) { best = link; bestLen = href.length; }
+        }
+    });
+    if (best) { best.classList.add('active'); best.setAttribute('aria-current', 'page'); }
+})();
+</script>
 </body>
 </html>

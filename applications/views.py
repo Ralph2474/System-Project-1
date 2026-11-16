@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.utils import timezone
 
 from accounts.decorators import coordinator_required, role_login_required
@@ -194,8 +195,18 @@ def application_decide(request, pk):
             internship = application.internship
             with transaction.atomic():
                 if decision == ApplicationRecord.STATUS_APPROVED:
+                    # Lock the posting row so two coordinators approving at the
+                    # same time can't both take the last slot.
+                    internship = InternshipPosting.objects.select_for_update().get(pk=internship.pk)
                     if internship.slots_available <= 0:
                         messages.error(request, 'This posting has no available slots left.')
+                        return redirect('applications:application_manage')
+                    if PlacementRecord.objects.filter(student=application.student).exists():
+                        messages.error(
+                            request,
+                            f'{application.student.username} is already placed in an internship. '
+                            'Reject this application instead.',
+                        )
                         return redirect('applications:application_manage')
                     application.status = ApplicationRecord.STATUS_APPROVED
                     application.decision_note = note
@@ -218,8 +229,8 @@ def application_decide(request, pk):
             status_filter = request.POST.get('status', '')
             sort_by = request.POST.get('sort', 'applied_on')
             page = request.POST.get('page', '1')
-            redirect_url = f"?search={search_query}&status={status_filter}&sort={sort_by}&page={page}"
-            return redirect(f"{reverse('applications:application_manage')}{redirect_url}")
+            query = urlencode({'search': search_query, 'status': status_filter, 'sort': sort_by, 'page': page})
+            return redirect(f"{reverse('applications:application_manage')}?{query}")
     else:
         form = ApplicationDecisionForm()
     return render(request, 'applications/application_manage.html', {'applications': ApplicationRecord.objects.filter(status=ApplicationRecord.STATUS_PENDING), 'form': form, 'application': application})
